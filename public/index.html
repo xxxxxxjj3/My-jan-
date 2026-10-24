@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>বন্ধু – চ্যাট ও কল</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#14213d;--mut:#6b7590;--pri:#1a8cff;--bub:#e6ebf5;--bd:#e1e6f0}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#171f30;--tx:#eef2fb;--mut:#8f9ab5;--bub:#232d44;--bd:#25304a}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;font-size:16px;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 16px;background:var(--pri);color:#fff}
+button.g{background:var(--bub);color:var(--tx)}
+input{font:inherit;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin-top:10px}
+#app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
+.v{display:none;flex:1;flex-direction:column;min-height:0}.v.on{display:flex}
+.hd{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--bd)}
+.hd h1{font-size:18px;margin:0;flex:1}
+.av{width:42px;height:42px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.pad{padding:14px;overflow:auto;flex:1}
+.row{display:flex;align-items:center;gap:12px;padding:10px;background:var(--card);border-radius:14px;margin-top:8px;cursor:pointer}
+.row small{display:block;color:var(--mut)}
+.dot{width:9px;height:9px;border-radius:50%;background:#9aa4bd;display:inline-block;margin-right:5px}.dot.on{background:#22c55e}
+.un{background:#e5334b;color:#fff;border-radius:10px;padding:0 8px;margin-left:auto;font-size:13px}
+#msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.b{max-width:78%;padding:8px 12px;border-radius:16px;background:var(--bub);word-wrap:break-word}
+.b.me{align-self:flex-end;background:var(--pri);color:#fff}
+.sd{display:flex;gap:8px;padding:10px;background:var(--card);border-top:1px solid var(--bd)}.sd input{margin:0}
+.hide{display:none!important}
+#call{position:fixed;inset:0;background:#0b0f19;color:#fff;display:flex;flex-direction:column;align-items:center;z-index:9;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+#rv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#lv{position:absolute;right:12px;top:calc(12px + env(safe-area-inset-top,0px));width:100px;height:140px;object-fit:cover;border-radius:12px;background:#222;z-index:2}
+#ci{position:relative;z-index:2;text-align:center;margin-top:auto;padding:20px}
+#ci .av{width:90px;height:90px;font-size:36px;margin:0 auto 10px}
+.cb{position:relative;z-index:2;display:flex;gap:16px;padding:24px}
+.cb button{border-radius:50%;width:62px;height:62px;font-size:24px;padding:0}
+.red{background:#e5334b}.grn{background:#16a34a}
+</style>
+</head>
+<body>
+<div id="app">
+ <div id="login" class="v on pad" style="display:block">
+  <h1>বন্ধু</h1>
+  <p style="color:var(--mut)">ইউজারনেম ও পাসওয়ার্ড দিয়ে অ্যাকাউন্ট খুলুন, তারপর লগইন করুন।</p>
+  <input id="un" placeholder="ইউজারনেম, যেমন: rahim_01" maxlength="20" autocapitalize="none" autocomplete="username">
+  <input id="pw" type="password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" maxlength="64" autocomplete="current-password">
+  <input id="pw2" type="password" class="hide" placeholder="পাসওয়ার্ড আবার লিখুন" maxlength="64" autocomplete="new-password">
+  <button id="go" style="margin-top:12px;width:100%">লগইন</button>
+  <button id="sw" class="g" style="margin-top:8px;width:100%">নতুন অ্যাকাউন্ট খুলুন</button>
+  <p id="err" style="color:#e5334b"></p><p id="ok" style="color:#16a34a"></p>
+ </div>
+ <div id="home" class="v">
+  <div class="hd"><div class="av" id="meav"></div><h1 id="mename"></h1><button class="g" id="out">বের হন</button></div>
+  <div class="pad"><input id="q" placeholder="ইউজারনেম খুঁজুন…" style="margin-top:0"><div id="list"></div></div>
+ </div>
+ <div id="chat" class="v">
+  <div class="hd"><button class="g" id="back">←</button><div class="av" id="pav"></div><h1 id="pname"></h1><button class="g" id="ac">📞</button><button class="g" id="vc">📹</button></div>
+  <div id="msgs"></div>
+  <div class="sd"><input id="txt" placeholder="মেসেজ লিখুন…"><button id="snd">পাঠান</button></div>
+ </div>
+</div>
+<div id="call" class="hide">
+ <video id="rv" autoplay playsinline></video><video id="lv" autoplay playsinline muted></video>
+ <div id="ci"><div class="av" id="cav"></div><h2 id="cn" style="margin:0"></h2><p id="cs"></p></div>
+ <div class="cb"><button class="grn hide" id="acc">✓</button><button class="red" id="end">✕</button></div>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var token=null,me=null,peer=null,ws=null,online=[],unread={},list=[],pc=null,stream=null,callWith=null,pend=null,cand=[],ice=null,signup=false;
+function view(id){["login","home","chat"].forEach(function(x){$(x).classList.toggle("on",x===id);if(x==="login")$(x).style.display=x===id?"block":"none"})}
+function ini(n){return (n||"?").charAt(0).toUpperCase()}
+async function api(path,opt){
+ opt=opt||{};opt.headers=Object.assign({"Content-Type":"application/json"},token?{Authorization:"Bearer "+token}:{},opt.headers||{});
+ var r=await fetch(path,opt),j=await r.json().catch(function(){return{}});
+ if(r.status===401&&token){logout();throw new Error("লগইন দরকার")}
+ if(!r.ok)throw new Error(j.error||"ত্রুটি");return j}
+function mode(s){signup=s;$("pw2").classList.toggle("hide",!s);$("go").textContent=s?"অ্যাকাউন্ট তৈরি করুন":"লগইন";$("sw").textContent=s?"আগে থেকেই অ্যাকাউন্ট আছে? লগইন":"নতুন অ্যাকাউন্ট খুলুন";$("err").textContent=""}
+$("sw").onclick=function(){$("ok").textContent="";mode(!signup)};
+$("go").onclick=async function(){
+ var u=$("un").value.trim().toLowerCase(),p=$("pw").value;$("err").textContent="";$("ok").textContent="";
+ try{
+  if(signup){
+   if(p!==$("pw2").value)throw new Error("দুটি পাসওয়ার্ড মিলছে না");
+   await api("/api/signup",{method:"POST",body:JSON.stringify({username:u,password:p})});
+   $("pw").value="";$("pw2").value="";mode(false);$("ok").textContent="অ্যাকাউন্ট তৈরি হয়েছে। এখন লগইন করুন।";return}
+  var r=await api("/api/login",{method:"POST",body:JSON.stringify({username:u,password:p})});
+  try{localStorage.setItem("bondhu_token",r.token)}catch(e){}
+  start(r.token,r.username)
+ }catch(e){$("err").textContent=e.message}
+};
+function logout(){try{localStorage.removeItem("bondhu_token")}catch(e){}location.reload()}
+$("out").onclick=logout;
+async function start(t,u){
+ token=t;me=u;$("meav").textContent=ini(u);$("mename").textContent="@"+u;view("home");
+ try{ice=await api("/api/ice")}catch(e){}
+ connect();loadUsers()
+}
+function connect(){
+ ws=new WebSocket((location.protocol==="https:"?"wss://":"ws://")+location.host+"/ws?token="+encodeURIComponent(token));
+ ws.onmessage=function(e){var m=JSON.parse(e.data);
+  if(m.type==="presence"){online=m.online;render()}
+  else if(m.type==="msg"){onMsg(m)}
+  else if(m.type==="sig"){onSig(m)}};
+ ws.onclose=function(e){if(e.code===4001)return logout();if(token)setTimeout(connect,2000)}
+}
+function wsend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))}
+async function loadUsers(){try{list=await api("/api/users?q="+encodeURIComponent($("q").value.trim()));render()}catch(e){}}
+var qt;$("q").oninput=function(){clearTimeout(qt);qt=setTimeout(loadUsers,250)};
+function render(){
+ var l=$("list");l.textContent="";
+ list.forEach(function(u){
+  var r=document.createElement("div");r.className="row";
+  var a=document.createElement("div");a.className="av";a.textContent=ini(u);
+  var t=document.createElement("div"),on=online.indexOf(u)>-1;
+  var d=document.createElement("span");d.className="dot"+(on?" on":"");t.appendChild(d);t.appendChild(document.createTextNode("@"+u));
+  var s=document.createElement("small");s.textContent=on?"অনলাইন":"অফলাইন";t.appendChild(s);
+  r.appendChild(a);r.appendChild(t);
+  if(unread[u]){var b=document.createElement("span");b.className="un";b.textContent=unread[u];r.appendChild(b)}
+  r.onclick=function(){openChat(u)};l.appendChild(r)});
+ if(!l.firstChild)l.innerHTML='<p style="color:var(--mut)">কোনো ইউজার পাওয়া যায়নি।</p>'
+}
+function bub(m){var b=document.createElement("div");b.className="b"+(m.sender===me?" me":"");b.textContent=m.text;var x=$("msgs");x.appendChild(b);x.scrollTop=x.scrollHeight}
+async function openChat(u){
+ peer=u;unread[u]=0;$("pav").textContent=ini(u);$("pname").textContent="@"+u;$("msgs").textContent="";view("chat");
+ try{(await api("/api/messages/"+u)).forEach(bub)}catch(e){}
+}
+function onMsg(m){
+ var other=m.from===me?m.to:m.from;
+ if(peer===other&&$("chat").classList.contains("on"))bub({sender:m.from,text:m.text});
+ else if(m.from!==me){unread[other]=(unread[other]||0)+1;if(list.indexOf(other)<0)list.push(other);render()}
+}
+$("back").onclick=function(){peer=null;view("home");render()};
+function sendMsg(){var t=$("txt").value.trim();if(!t||!peer)return;$("txt").value="";wsend({type:"msg",to:peer,text:t})}
+$("snd").onclick=sendMsg;$("txt").onkeydown=function(e){if(e.key==="Enter")sendMsg()};
+
+/* ---- কল ---- */
+function sig(to,d){wsend({type:"sig",to:to,d:d})}
+function ui(n,st,ring){$("call").classList.remove("hide");$("cav").textContent=ini(n);$("cn").textContent="@"+n;$("cs").textContent=st;$("acc").classList.toggle("hide",!ring)}
+async function media(v){stream=await navigator.mediaDevices.getUserMedia({audio:true,video:v?{facingMode:"user"}:false});$("lv").srcObject=stream;$("lv").classList.toggle("hide",!v)}
+function mkpc(){
+ pc=new RTCPeerConnection(ice||{iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+ stream.getTracks().forEach(function(t){pc.addTrack(t,stream)});
+ pc.ontrack=function(e){$("rv").srcObject=e.streams[0];$("cs").textContent="কথা চলছে";$("ci").style.marginTop="0"};
+ pc.onicecandidate=function(e){if(e.candidate)sig(callWith,{type:"ice",c:e.candidate})};
+ pc.onconnectionstatechange=function(){if(pc&&(pc.connectionState==="failed"||pc.connectionState==="disconnected"))finish(true)}
+}
+async function startCall(v){
+ if(!peer)return;if(online.indexOf(peer)<0){alert("@"+peer+" এখন অনলাইনে নেই");return}
+ try{await media(v)}catch(e){alert("ক্যামেরা/মাইক্রোফোনের অনুমতি পাওয়া যায়নি");return}
+ callWith=peer;pend={video:v};ui(peer,"রিং হচ্ছে…",false);sig(peer,{type:"ring",video:v})
+}
+$("ac").onclick=function(){startCall(false)};$("vc").onclick=function(){startCall(true)};
+async function drain(){for(var i=0;i<cand.length;i++)try{await pc.addIceCandidate(cand[i])}catch(e){}cand=[]}
+async function onSig(m){
+ var d=m.d||{};
+ if(d.type==="ring"){if(callWith){sig(m.from,{type:"end"});return}callWith=m.from;pend={video:!!d.video};ui(m.from,d.video?"ভিডিও কল আসছে…":"অডিও কল আসছে…",true);return}
+ if(m.from!==callWith)return;
+ if(d.type==="accept"){mkpc();var o=await pc.createOffer();await pc.setLocalDescription(o);sig(callWith,{type:"offer",sdp:o})}
+ else if(d.type==="offer"){mkpc();await pc.setRemoteDescription(d.sdp);await drain();var a=await pc.createAnswer();await pc.setLocalDescription(a);sig(callWith,{type:"answer",sdp:a})}
+ else if(d.type==="answer"){await pc.setRemoteDescription(d.sdp);await drain()}
+ else if(d.type==="ice"){if(pc&&pc.remoteDescription)try{await pc.addIceCandidate(d.c)}catch(e){}else cand.push(d.c)}
+ else if(d.type==="end"){finish(false)}
+}
+$("acc").onclick=async function(){
+ try{await media(pend.video)}catch(e){alert("অনুমতি পাওয়া যায়নি");finish(true);return}
+ $("acc").classList.add("hide");$("cs").textContent="সংযোগ হচ্ছে…";sig(callWith,{type:"accept"})
+};
+function finish(n){
+ if(n&&callWith)sig(callWith,{type:"end"});
+ if(pc){pc.close();pc=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
+ $("rv").srcObject=null;$("lv").srcObject=null;cand=[];callWith=null;pend=null;$("ci").style.marginTop="auto";$("call").classList.add("hide")
+}
+$("end").onclick=function(){finish(true)};
+var s=null;try{s=localStorage.getItem("bondhu_token")}catch(e){}
+if(s){try{var p=JSON.parse(atob(s.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));if(p.exp*1000>Date.now())start(s,p.u);else logout()}catch(e){logout()}}
+})();
+</script>
+</body>
+  </html>
